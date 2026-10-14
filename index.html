@@ -1,10 +1,21 @@
 <!DOCTYPE html>
-<!-- build 8eaeb88 -->
+<!-- build cbac8d2 -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Van Beukering &#8212; 90s rave on brass</title>
+  <script>
+    (function () {
+      var old = ["vanbeukering.pimvandermeer.nl"];
+      if (old.indexOf(location.hostname) !== -1) {
+        location.replace("https://vanbeukering.band/?from=" + location.hostname + location.hash);
+      } else if (/[?&]from=/.test(location.search)) {
+        try { fetch('/', { cache: 'reload', credentials: 'omit' }).catch(function () {}); } catch (e) {}
+        history.replaceState(null, '', location.pathname + location.hash);
+      }
+    })();
+  </script>
   <script>
     document.documentElement.classList.add('js');
     (function () {
@@ -667,7 +678,8 @@ Beukenstein in Valkenburg! <a href="https://castellumpop.nl/" target="_blank" re
     </div>
 
   </div>
-</div>  </section>
+</div>
+  </section>
 
   <section id="contact" aria-labelledby="contact-h">
     <div class="contact-text">
