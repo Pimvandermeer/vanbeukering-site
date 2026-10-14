@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build 73b7d1e -->
+<!-- build 6a9a60b -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -45,16 +45,16 @@
   <link rel="icon" href="favicon-32.png?v=58d4e62c43" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="apple-touch-icon.png?v=7cc2404bcf">
   <link rel="preconnect" href="https://i.ytimg.com">
-  <link rel="stylesheet" href="style.css?v=ebe239cdd7">
+  <link rel="stylesheet" href="style.css?v=3430eb5174">
 </head>
 <body>
 <div id="ground" aria-hidden="true"></div>
 <div id="type" aria-hidden="true"></div>
 
 <div class="sms" id="sms" role="marquee" aria-label="Fan text messages">
-  <span class="sms-tag"><i aria-hidden="true"></i>SMS</span>
+  <span class="sms-tag"><i aria-hidden="true"></i><span class="sms-tag-t">SMS</span></span>
   <div class="sms-track" lang="nl"><p class="sms-msg" id="smsMsg"></p></div>
-  <a class="sms-cta" lang="nl" href="https://www.instagram.com/beukeringvan/" target="_blank" rel="noopener">sms BEUK naar 4141</a>
+  <a class="sms-cta" id="smsCta" lang="nl" href="https://www.instagram.com/beukeringvan/" target="_blank" rel="noopener" aria-haspopup="dialog"><span>sms BEUK<span class="sms-cta-long"> naar 4141</span></span></a>
 </div>
 
 <main>
@@ -720,6 +720,46 @@ Beukenstein in Valkenburg! <a href="https://castellumpop.nl/" target="_blank" re
   </div>
 </dialog>
 
+<dialog class="nk-dlg" id="nokia" aria-label="Text your own message on a Nokia 3310">
+  <div class="nokia" id="nk">
+    <span class="nk-ear" aria-hidden="true"></span>
+    <span class="nk-brand" aria-hidden="true">NOKIA</span>
+    <div class="nk-bezel">
+      <div class="nk-lcd">
+        <div class="nk-top" aria-hidden="true">
+          <span class="nk-bars"><i></i><i></i><i></i><i></i></span>
+          <span id="nkMode">Abc</span>
+          <span id="nkLeft">160</span>
+        </div>
+        <div class="nk-text" id="nkText" tabindex="0" role="textbox" aria-multiline="true" aria-label="Your message" lang="nl"></div>
+        <div class="nk-soft" id="nkSoft" aria-hidden="true">Send</div>
+      </div>
+    </div>
+    <div class="nk-nav">
+      <button type="button" class="nk-c" data-k="C" aria-label="Clear, hold to clear everything">C</button>
+      <button type="button" class="nk-navi" id="nkNavi" aria-label="Send"></button>
+      <span class="nk-rocker" aria-hidden="true"></span>
+    </div>
+    <div class="nk-keys">
+      <button type="button" data-k="1" aria-label="1, punctuation"><b>1</b><small>.,?!</small></button>
+      <button type="button" data-k="2" aria-label="2 abc"><b>2</b><small>abc</small></button>
+      <button type="button" data-k="3" aria-label="3 def"><b>3</b><small>def</small></button>
+      <button type="button" data-k="4" aria-label="4 ghi"><b>4</b><small>ghi</small></button>
+      <button type="button" data-k="5" aria-label="5 jkl"><b>5</b><small>jkl</small></button>
+      <button type="button" data-k="6" aria-label="6 mno"><b>6</b><small>mno</small></button>
+      <button type="button" data-k="7" aria-label="7 pqrs"><b>7</b><small>pqrs</small></button>
+      <button type="button" data-k="8" aria-label="8 tuv"><b>8</b><small>tuv</small></button>
+      <button type="button" data-k="9" aria-label="9 wxyz"><b>9</b><small>wxyz</small></button>
+      <button type="button" data-k="*" aria-label="star, smileys"><b>*</b><small>:-)</small></button>
+      <button type="button" data-k="0" aria-label="0, space"><b>0</b><small>_</small></button>
+      <button type="button" data-k="#" aria-label="hash, letter case"><b>#</b><small>Aa</small></button>
+    </div>
+    <span class="nk-mic" aria-hidden="true"></span>
+  </div>
+  <p class="nk-help">Press 2 twice for a b, like it's 2000. Or just type. <button type="button" id="nkClose">close</button></p>
+  <p class="sr-only" id="nkLive" aria-live="polite"></p>
+</dialog>
+
 <canvas id="dust" aria-hidden="true"></canvas>
 
 <script>
@@ -804,6 +844,8 @@ if (!reduce) setTimeout(heat, 1200);
 const smsBar = document.getElementById('sms'), smsEl = document.getElementById('smsMsg'), track = smsEl.parentElement;
 const narrow = matchMedia('(max-width:700px)'), SMS_PAD = 10;
 let smsI = Math.floor(Math.random() * SMS.length), smsAnim = null, smsTimer = 0, smsHeld = false;
+// messages are always set as text, never as HTML: visitors' own messages run here too
+function smsLine(n, ...rest) { const b = document.createElement('b'); b.textContent = n + ':'; smsEl.replaceChildren(b, ' ', ...rest); }
 function nextSms() {
   clearTimeout(smsTimer);
   if (smsAnim) { smsAnim.onfinish = null; smsAnim.cancel(); smsAnim = null; }
@@ -811,14 +853,14 @@ function nextSms() {
   smsBar.classList.remove('new', 'wrap', 'typing'); void smsBar.offsetWidth; smsBar.classList.add('new');
   smsEl.style.transform = '';
   if (reduce) {
-    smsEl.innerHTML = `<b>${n}:</b> ${m}`;
+    smsLine(n, m);
     const wrap = smsEl.scrollWidth > track.clientWidth - 2 * SMS_PAD;
     smsBar.classList.toggle('wrap', wrap);
     if (!wrap) smsEl.style.transform = `translateX(${SMS_PAD}px)`;
     smsTimer = setTimeout(nextSms, 8000); return;
   }
   if (narrow.matches) { typeSms(n, m); return; }
-  smsEl.innerHTML = `<b>${n}:</b> ${m}`;
+  smsLine(n, m);
   const w = track.clientWidth, mw = smsEl.scrollWidth;
   smsAnim = smsEl.animate([{ transform: `translateX(${w}px)` }, { transform: `translateX(${-mw}px)` }], { duration: (w + mw) / 0.08, easing: 'linear' });
   if (smsHeld) smsAnim.pause();
@@ -826,8 +868,9 @@ function nextSms() {
 }
 function typeSms(n, m) {
   smsBar.classList.add('typing');
-  smsEl.innerHTML = `<b>${n}:</b> <span></span><i class="sms-cur" aria-hidden="true"></i>`;
-  const out = smsEl.querySelector('span');
+  const out = document.createElement('span'), cur = document.createElement('i');
+  cur.className = 'sms-cur'; cur.setAttribute('aria-hidden', 'true');
+  smsLine(n, out, cur);
   let k = 0;
   const follow = () => { smsEl.style.transform = `translateX(${Math.min(SMS_PAD, track.clientWidth - SMS_PAD - smsEl.scrollWidth)}px)`; };
   const step = () => {
@@ -841,9 +884,140 @@ function typeSms(n, m) {
 const holdSms = on => { smsHeld = on; if (smsAnim) on ? smsAnim.pause() : smsAnim.play(); };
 smsBar.addEventListener('pointerenter', e => { if (isMouse(e)) holdSms(true); });
 smsBar.addEventListener('pointerleave', e => { if (isMouse(e)) holdSms(false); });
-smsBar.addEventListener('focusin', () => holdSms(true)); smsBar.addEventListener('focusout', () => holdSms(false));
+// keyboard focus pauses it too (not the focus a closing dialog hands back after a click)
+smsBar.addEventListener('focusin', e => { if (e.target.matches(':focus-visible')) holdSms(true); });
+smsBar.addEventListener('focusout', () => holdSms(false));
 track.addEventListener('click', () => { holdSms(false); nextSms(); });
+/* your own messages (sent on the Nokia below) run in the bar next, and again later this visit */
+const MY_SMS = 'vb-my-sms', ME = 'jij';
+try { (JSON.parse(sessionStorage.getItem(MY_SMS)) || []).forEach(m => { if (typeof m === 'string') SMS.push([ME, m.slice(0, 160)]); }); } catch (e) {}
+function deliverSms(m) {
+  smsI %= SMS.length;
+  SMS.splice(smsI, 0, [ME, m]);
+  try { sessionStorage.setItem(MY_SMS, JSON.stringify(SMS.filter(s => s[0] === ME).map(s => s[1]).slice(-3))); } catch (e) {}
+  holdSms(false); nextSms();
+  smsBar.classList.add('mine'); setTimeout(() => smsBar.classList.remove('mine'), 2600);
+}
 nextSms();
+
+/* ---- NOKIA: "sms BEUK naar 4141" opens a Nokia 3310 to write your own text on.
+   Multi-tap like the real thing: press 2 twice for b; # changes the letter case (Abc, abc,
+   ABC, 123); * cycles smileys; 0 is a space; C deletes, hold C to clear. A keyboard works
+   too. Send shows the sending screen, the phone goes away and the message runs in the SMS
+   bar with the message tone. It is only shown on this visitor's own screen. ---- */
+const nk = document.getElementById('nokia'), nkPhone = document.getElementById('nk'), nkText = document.getElementById('nkText');
+const nkMode = document.getElementById('nkMode'), nkLeft = document.getElementById('nkLeft'), nkSoft = document.getElementById('nkSoft');
+const nkLive = document.getElementById('nkLive'), smsCta = document.getElementById('smsCta');
+const NK_KEYS = { '1': ".,?!'-1", '2': 'abc2', '3': 'def3', '4': 'ghi4', '5': 'jkl5', '6': 'mno6', '7': 'pqrs7', '8': 'tuv8', '9': 'wxyz9', '0': ' 0',
+                  '*': [':-)', ';-)', ':-D', '<3', ':-P', ':-(', '!!'] };
+const NK_MODES = ['Abc', 'abc', 'ABC', '123'], NK_MAX = 160, NK_TAP = 900;
+let nkBase = '', nkCand = '', nkKey = '', nkIdx = 0, nkTimer = 0, nkNoteTimer = 0, nkModeI = 0, nkBusy = false;
+
+// key tones and the "... -- ..." message tone; the audio starts on the first key press (iOS needs a tap for it)
+let audio = null;
+function soundOn() {
+  try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === 'suspended') audio.resume(); }
+  catch (e) { audio = null; }
+}
+function beep(freq, dur, at, vol) {
+  if (!audio) return;
+  const t = audio.currentTime + at, o = audio.createOscillator(), g = audio.createGain();
+  o.type = 'square'; o.frequency.value = freq;
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .004);
+  g.gain.setValueAtTime(vol, t + dur - .006); g.gain.linearRampToValueAtTime(0, t + dur);
+  o.connect(g); g.connect(audio.destination); o.start(t); o.stop(t + dur + .02);
+}
+function keyTone() { soundOn(); beep(1400, .03, 0, .02); if (navigator.vibrate) navigator.vibrate(8); }
+function smsTone() {
+  const u = .075; let t = .05;
+  ['...', '--', '...'].forEach(letter => { for (const s of letter) { const d = s === '.' ? u : 3 * u; beep(1760, d, t, .045); t += d + u; } t += 2 * u; });
+}
+
+function nkCommit() { clearTimeout(nkTimer); nkBase += nkCand; nkCand = ''; nkKey = ''; }
+const nkCaps = () => nkModeI === 2 || (nkModeI === 0 && /(^|[.!?]\s+)$/.test(nkBase));
+function nkDraw() {
+  clearTimeout(nkNoteTimer);
+  const end = document.createElement('span');
+  if (nkCand) { end.className = 'nk-cand'; end.textContent = nkCand; } else end.className = 'nk-cur';
+  nkText.replaceChildren(nkBase, end);
+  nkText.scrollTop = nkText.scrollHeight;
+  nkMode.textContent = NK_MODES[nkModeI];
+  nkLeft.textContent = NK_MAX - (nkBase + nkCand).length;
+}
+function nkNote(html, ms) { nkText.innerHTML = html; clearTimeout(nkNoteTimer); nkNoteTimer = setTimeout(nkDraw, ms); }
+function nkType(s) { nkCommit(); if ((nkBase + s).length <= NK_MAX) nkBase += s; nkDraw(); }
+function nkDelete() { if (nkCand) { clearTimeout(nkTimer); nkCand = ''; nkKey = ''; } else nkBase = Array.from(nkBase).slice(0, -1).join(''); nkDraw(); }
+function nkPress(k) {
+  if (nkBusy) return;
+  if (k === 'C') { nkDelete(); return; }
+  if (k === '#') { nkCommit(); nkModeI = (nkModeI + 1) % NK_MODES.length; nkDraw(); return; }
+  if (nkModeI === 3 && /\d/.test(k)) { nkType(k); return; }
+  const opts = NK_KEYS[k];
+  if (!opts) return;
+  if (k === nkKey) nkIdx = (nkIdx + 1) % opts.length;          // same key again: the next letter
+  else { nkCommit(); nkKey = k; nkIdx = 0; }
+  const c = nkCaps() ? opts[nkIdx].toUpperCase() : opts[nkIdx];
+  if ((nkBase + c).length > NK_MAX) { nkCand = ''; nkKey = ''; nkDraw(); return; }
+  nkCand = c;
+  clearTimeout(nkTimer); nkTimer = setTimeout(() => { nkCommit(); nkDraw(); }, NK_TAP);
+  nkDraw();
+}
+function nkSend() {
+  if (nkBusy) return;
+  nkCommit();
+  const msg = nkBase.replace(/\s+/g, ' ').trim();
+  if (!msg) { nkNote('<div class="nk-screen">Write<br>something<br>first</div>', 1400); return; }
+  nkBusy = true; nkBase = ''; nkSoft.textContent = '';
+  nkText.innerHTML = '<div class="nk-screen"><svg class="nk-env" viewBox="0 0 22 14" aria-hidden="true"><path d="M1 1h20v12H1zM1 1l10 7 10-7" fill="none" stroke="currentColor" stroke-width="2"/></svg>Sending<br>message<i class="nk-prog"></i></div>';
+  nkLive.textContent = 'Sending message';
+  setTimeout(() => {
+    nkText.innerHTML = '<div class="nk-screen"><svg class="nk-ok" viewBox="0 0 16 12" aria-hidden="true"><path d="M1 6l5 5L15 1" fill="none" stroke="currentColor" stroke-width="2.4"/></svg>Message<br>sent</div>';
+    nkLive.textContent = 'Message sent';
+    setTimeout(() => nkHide(() => { nkBusy = false; deliverSms(msg); smsTone(); }), reduce ? 700 : 1100);
+  }, reduce ? 500 : 1700);
+}
+function nkOpen() {
+  if (nkBusy) return;
+  nkSoft.textContent = 'Send'; nkLive.textContent = ''; nkDraw();
+  nk.showModal();
+  nkText.focus({ preventScroll: true });
+  requestAnimationFrame(() => nk.classList.add('show'));
+}
+function nkHide(after) {
+  nkCommit(); nk.classList.remove('show');
+  const done = () => { nk.close(); if (after) after(); };
+  if (reduce) done(); else setTimeout(done, 380);
+}
+smsCta.addEventListener('click', e => {
+  if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return;
+  e.preventDefault(); nkOpen();
+});
+// hold C to clear everything; a normal press deletes one letter
+let nkHold = 0, nkHeld = false;
+const cKey = nkPhone.querySelector('[data-k="C"]');
+cKey.addEventListener('pointerdown', () => {
+  nkHeld = false; clearTimeout(nkHold);
+  nkHold = setTimeout(() => { if (nkBusy) return; nkHeld = true; nkCommit(); nkBase = ''; keyTone(); nkDraw(); }, 650);
+});
+['pointerup', 'pointerleave', 'pointercancel'].forEach(t => cKey.addEventListener(t, () => clearTimeout(nkHold)));
+nkPhone.addEventListener('click', e => {
+  const b = e.target.closest('[data-k]');
+  if (!b) return;
+  if (b === cKey && nkHeld) { nkHeld = false; return; }
+  keyTone(); nkPress(b.dataset.k);
+});
+document.getElementById('nkNavi').addEventListener('click', () => { keyTone(); nkSend(); });
+document.getElementById('nkClose').addEventListener('click', () => nkHide());
+nk.addEventListener('cancel', e => { e.preventDefault(); nkHide(); });
+nk.addEventListener('click', e => { if (e.target === nk) nkHide(); });
+// typing on a keyboard: letters go in as typed, Backspace deletes, Enter sends
+nk.addEventListener('keydown', e => {
+  if (nkBusy || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.target.tagName === 'BUTTON' && (e.key === 'Enter' || e.key === ' ')) return;   // the focused key does its own job
+  if (e.key === 'Enter') { e.preventDefault(); soundOn(); nkSend(); }
+  else if (e.key === 'Backspace') { e.preventDefault(); nkDelete(); }
+  else if (e.key.length === 1 || /^\p{Extended_Pictographic}/u.test(e.key)) { e.preventDefault(); soundOn(); nkType(e.key); }
+});
 
 /* ---- hero: glitch now and then, and rotate through the band members; each one brings their
    own colours (BAND, set up in <head>), switched under the glitch together with the photo ---- */
