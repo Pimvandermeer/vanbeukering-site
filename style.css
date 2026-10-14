@@ -225,30 +225,38 @@ footer{position:absolute;left:0;right:0;bottom:16px;text-align:center;font-size:
 }
 
 /* ---- NOKIA 3310: write your own text (opened from the SMS bar) ----
-   Everything is sized in em, so the whole phone scales with its font-size to fit the screen. */
+   A black and white photo like the TVs (static/nokia.webp, made by tools/prepare_nokia.py). The
+   LCD sits behind its cut-out screen and the keys are buttons on top; both are placed with
+   --x --y --w --h (fractions of the photo) from the template. The LCD is sized in em, and the
+   phone's font-size follows its width, so everything scales together. */
 dialog.nk-dlg{border:0;padding:0;margin:0;width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;background:transparent;overflow:hidden}
 dialog.nk-dlg[open]{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
 dialog.nk-dlg::backdrop{background:rgba(10,10,10,0);transition:background .35s}
 dialog.nk-dlg.show::backdrop{background:rgba(10,10,10,.92)}
-.nokia{position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;width:13em;height:30em;padding:1.2em 1.1em 1em;
-  font-size:min(calc((100vh - 110px) / 30),calc(92vw / 13),20px);font-size:min(calc((100dvh - 110px) / 30),calc(92vw / 13),20px);
-  border-radius:5.4em 5.4em 4.6em 4.6em/3.4em 3.4em 6.4em 6.4em;
-  background:radial-gradient(120% 55% at 28% 6%,rgba(255,255,255,.22),transparent 55%),linear-gradient(180deg,#2d4373,#1c2a4c 68%,#141e38);
-  box-shadow:0 1.4em 3em rgba(0,0,0,.55),inset 0 .25em .5em rgba(255,255,255,.2),inset 0 -.5em .9em rgba(0,0,0,.4);
+.nokia{position:relative;flex:0 0 auto;aspect-ratio:1282/3037;
+  width:min(calc((100vh - 110px) * .4221),92vw,300px);width:min(calc((100dvh - 110px) * .4221),92vw,300px);
+  font-size:min(calc((100vh - 110px) * .4221 / 13),calc(92vw / 13),calc(300px / 13));font-size:min(calc((100dvh - 110px) * .4221 / 13),calc(92vw / 13),calc(300px / 13));
+  filter:drop-shadow(0 18px 30px rgba(0,0,0,.55));
   touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;
   transform:translateY(35%) rotate(5deg);opacity:0;transition:transform .5s cubic-bezier(.2,.9,.25,1.08),opacity .25s}
 dialog.nk-dlg.show .nokia{transform:none;opacity:1}
-.nokia :focus-visible{outline:2px solid #fff;outline-offset:2px}
-.nk-ear{flex:0 0 auto;width:2.6em;height:.32em;border-radius:1em;background:#0b1327;box-shadow:inset 0 .08em .12em rgba(0,0,0,.8)}
-.nk-brand{flex:0 0 auto;margin:.55em 0 .6em;font:900 .8em/1 'Arial Black',Arial,sans-serif;letter-spacing:.2em;color:#d3dbec;text-shadow:0 -1px 0 rgba(0,0,0,.4)}
-.nk-bezel{flex:0 0 auto;width:100%;height:9.6em;padding:.65em .7em 1.05em;background:#0c1430;border-radius:1em 1em 2.4em 2.4em/1em 1em 1.7em 1.7em;box-shadow:inset 0 .12em .3em rgba(0,0,0,.9),0 .06em 0 rgba(255,255,255,.18)}
-.nk-lcd{display:flex;flex-direction:column;height:100%;padding:.35em .5em .3em;border-radius:.35em;background:linear-gradient(180deg,#bdd5a0,#a2bf85);box-shadow:inset 0 .15em .45em rgba(0,0,0,.4);color:#1d2915;font-family:var(--f-pixel);font-size:.58em}
+.nk-photo{position:absolute;inset:0;width:100%;height:100%;max-width:none;z-index:2;pointer-events:none}
+.nk-lcd{position:absolute;z-index:1;left:calc(var(--x) * 100% - 1%);top:calc(var(--y) * 100% - .5%);width:calc(var(--w) * 100% + 2%);height:calc(var(--h) * 100% + 1%);
+  display:flex;flex-direction:column;padding:.75em 1.15em .6em;background:linear-gradient(180deg,#bcd1a4,#9db687);box-shadow:inset 0 .4em .9em rgba(0,0,0,.35);
+  color:#1d2915;font-family:var(--f-pixel);font-size:.56em}
+/* each key is a round window onto the same photo, so pressing it moves the real key */
+.nk-key{position:absolute;z-index:3;left:calc(var(--x) * 100%);top:calc(var(--y) * 100%);width:calc(var(--w) * 100%);height:calc(var(--h) * 100%);
+  padding:0;border:0;border-radius:50%;cursor:pointer;
+  background:url(nokia.webp) no-repeat calc(var(--x) / (1 - var(--w)) * 100%) calc(var(--y) / (1 - var(--h)) * 100%)/calc(100% / var(--w)) calc(100% / var(--h));
+  transition:transform .06s,filter .06s}
+.nk-key:active,.nk-key.down{transform:translateY(.09em);filter:brightness(.78)}
+.nokia :focus-visible{outline:2px solid #fff;outline-offset:1px}
 .nk-top{display:flex;justify-content:space-between;align-items:flex-end;flex:0 0 auto;height:1.5em;font-size:.72em;line-height:1}
 .nk-bars{display:flex;align-items:flex-end;gap:2px;height:1.1em}
 .nk-bars i{display:block;width:.32em;background:currentColor}
 .nk-bars i:nth-child(1){height:30%}.nk-bars i:nth-child(2){height:55%}.nk-bars i:nth-child(3){height:80%}.nk-bars i:nth-child(4){height:100%}
 .nk-text{flex:1 1 auto;min-height:0;margin-top:.35em;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;outline:none;cursor:text}
-.nk-text:focus-visible{outline:1px dashed #1d2915;outline-offset:1px}
+.nk-text:focus-visible{outline:none}   /* the blinking cursor shows where you type */
 .nk-cur{display:inline-block;width:.18em;height:1.15em;margin-left:1px;background:currentColor;vertical-align:-.25em;animation:blink 1s steps(1) infinite}
 .nk-cand{background:#1d2915;color:#b6cf99}
 .nk-soft{flex:0 0 auto;text-align:center;font-size:.8em;line-height:1;padding-top:.3em}
@@ -258,23 +266,6 @@ dialog.nk-dlg.show .nokia{transform:none;opacity:1}
 .nk-prog{display:block;width:80%;height:.7em;border:2px solid currentColor;background:linear-gradient(currentColor,currentColor) 0 0/0 100% no-repeat;animation:nkprog 1.6s steps(8) forwards}
 @keyframes nkprog{to{background-size:100% 100%}}
 .nk-ok{width:2em;height:1.5em}
-.nk-nav{position:relative;flex:0 0 auto;width:100%;height:3.3em;margin-top:.35em}
-.nk-nav button{font:inherit;border:0;padding:0;cursor:pointer}
-.nk-navi{position:absolute;left:50%;top:.15em;width:5.2em;height:2.1em;margin-left:-2.6em;border-radius:50%/60%;background:linear-gradient(180deg,#5a71a8,#2c3e6c);box-shadow:inset 0 .14em .2em rgba(255,255,255,.35),0 .16em .3em rgba(0,0,0,.55)}
-.nk-c,.nk-rocker{position:absolute;top:1.15em;width:2.6em;height:1.55em;background:linear-gradient(180deg,#dfe5ee,#aeb8c8);box-shadow:inset 0 -.1em .2em rgba(0,0,0,.25),0 .12em .2em rgba(0,0,0,.5)}
-.nk-c{left:.15em;border-radius:1.2em .5em 1em .7em;transform:rotate(-9deg);color:#1b2440}
-.nk-nav .nk-c{font:700 1em/1 Arial,Helvetica,sans-serif}
-.nk-rocker{right:.15em;border-radius:.5em 1.2em .7em 1em;transform:rotate(9deg)}
-.nk-rocker::before,.nk-rocker::after{content:"";position:absolute;left:50%;margin-left:-.3em;border:.3em solid transparent}
-.nk-rocker::before{top:.05em;border-bottom-color:#1b2440}
-.nk-rocker::after{bottom:.05em;border-top-color:#1b2440}
-.nk-keys{flex:1 1 auto;width:100%;margin-top:.35em;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:.42em .5em}
-.nk-keys button{font:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;border:0;padding:0;border-radius:46% 46% 50% 50%/50%;background:linear-gradient(180deg,#e6ebf2,#b0bacb);color:#1b2440;box-shadow:inset 0 -.12em .2em rgba(0,0,0,.25),0 .13em .22em rgba(0,0,0,.5);cursor:pointer;line-height:1}
-.nk-keys button:active,.nk-c:active,.nk-navi:active{transform:translateY(.06em);filter:brightness(.88)}
-.nk-c:active{transform:rotate(-9deg) translateY(.06em)}
-.nk-keys b{font:700 1.05em/1 Arial,Helvetica,sans-serif}
-.nk-keys small{margin-top:.22em;font:700 .5em/1 Arial,Helvetica,sans-serif;letter-spacing:.05em}
-.nk-mic{flex:0 0 auto;width:.45em;height:.45em;margin-top:.6em;border-radius:50%;background:#0b1327}
 .nk-help{margin:0;padding:0 16px;font-family:var(--f-pixel);font-size:10px;line-height:1.8;color:#e8e8e8;text-align:center;opacity:0;transition:opacity .3s}
 dialog.nk-dlg.show .nk-help{opacity:1}
 #nkClose{font:inherit;background:var(--brand);color:#111;border:0;padding:6px 14px;min-height:36px;margin-left:8px;cursor:pointer}
