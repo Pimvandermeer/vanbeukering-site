@@ -105,10 +105,12 @@ h2{font-weight:700;font-size:clamp(22px,3.4vw,44px);line-height:1.2;letter-spaci
 .tv .screen,.tv .noise,.tv .scan,.tv .glass{display:block}
 .tv .set{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;filter:drop-shadow(0 5px 0 rgba(0,0,0,.18))}
 .screen{position:absolute;left:calc(var(--sx) - 1%);top:calc(var(--sy) - 1%);width:calc(var(--sw) + 2%);height:calc(var(--sh) + 2%);overflow:hidden;background:#0a0a0a;border-radius:14%/18%;z-index:1}
-.feed{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;object-position:50% 0%;filter:grayscale(1) contrast(1.15);transition:filter 1.2s ease}
+/* thumbnails are pre-cropped to 4:3 around the action (thumbnails.py), so centre them */
+.feed{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;object-position:50% 50%;filter:grayscale(1) contrast(1.15);transition:filter 1.2s ease}
 .tv.col .feed{filter:saturate(1.2) contrast(1.05)}
-.tv.roll .feed{animation:vroll .5s linear 2}
-@keyframes vroll{from{object-position:50% 0%}to{object-position:50% 100%}}
+/* "vertical hold" glitch: the picture jumps up and settles */
+.tv.roll .feed{animation:vroll .36s steps(4) 3}
+@keyframes vroll{0%{transform:translateY(0)}25%{transform:translateY(-18%)}50%{transform:translateY(-9%)}75%{transform:translateY(-3%)}100%{transform:translateY(0)}}
 .noise{position:absolute;inset:-160px;background-image:var(--noise);background-size:160px;opacity:.1;mix-blend-mode:screen;animation:snow .2s steps(1) infinite paused}
 .wall.on .noise,.tz-set .noise{animation-play-state:running}
 @keyframes snow{0%{transform:translate(0,0)}25%{transform:translate(-53px,31px)}50%{transform:translate(47px,-71px)}75%{transform:translate(-19px,88px)}}
