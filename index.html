@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build cbac8d2 -->
+<!-- build 8be6b7e -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -18,13 +18,14 @@
   </script>
   <script>
     document.documentElement.classList.add('js');
+    var BAND = [{"src": "band-henk.webp", "vars": {"--accent": "#F4D10D", "--accent-text": "#7F6D09", "--type": "#8D790A"}}, {"src": "band-luuk-sax.webp", "vars": {"--accent": "#E44D69", "--accent-text": "#C2304D", "--type": "#D9415D"}}, {"src": "band-luuk.webp", "vars": {"--accent": "#B24154", "--accent-text": "#C2304D", "--type": "#D9415D"}}, {"src": "band-pim.webp", "vars": {"--accent": "#2145B0", "--accent-text": "#2145B0", "--type": "#667FC8"}}, {"src": "band-wouter.webp", "vars": {"--accent": "#E22346", "--accent-text": "#C2304D", "--type": "#D9415D"}}];   /* [{src, vars: {--type, --accent, --accent-text}}] */
     (function () {
-      var p = ["band-1.webp", "band-2.webp", "band-3.webp", "band-4.webp", "band-5.webp"];
-      if (!p.length) return;
-      var i = Math.floor(Math.random() * p.length);
-      document.documentElement.dataset.hero = i;
+      if (!BAND.length) return;
+      var i = Math.floor(Math.random() * BAND.length), r = document.documentElement;
+      r.dataset.hero = i;
+      for (var k in BAND[i].vars) r.style.setProperty(k, BAND[i].vars[k]);
       var l = document.createElement('link');
-      l.rel = 'preload'; l.as = 'image'; l.href = p[i]; l.setAttribute('fetchpriority', 'high');
+      l.rel = 'preload'; l.as = 'image'; l.href = BAND[i].src; l.setAttribute('fetchpriority', 'high');
       document.head.appendChild(l);
     })();
   </script>
@@ -44,7 +45,7 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="preconnect" href="https://i.ytimg.com">
-  <link rel="stylesheet" href="style.css?v=d346afa983">
+  <link rel="stylesheet" href="style.css?v=ebe239cdd7">
 </head>
 <body>
 <div id="ground" aria-hidden="true"></div>
@@ -58,20 +59,19 @@
 
 <main>
   <section id="home" aria-label="Home">
-    <figure class="hero-fig" id="heroFig" data-photos='["band-1.webp", "band-2.webp", "band-3.webp", "band-4.webp", "band-5.webp"]'>
+    <figure class="hero-fig" id="heroFig">
       <img class="h-base" alt="Van Beukering band member" fetchpriority="high">
       <img class="h-ghost" alt="" aria-hidden="true">
       <img class="h-slice" alt="" aria-hidden="true">
-      <noscript><img class="h-base" src="band-1.webp" alt="Van Beukering band member"></noscript>
+      <noscript><img class="h-base" src="band-henk.webp" alt="Van Beukering band member"></noscript>
     </figure>
     <script>
       (function () {
         var fig = document.getElementById('heroFig');
-        var photos = JSON.parse(fig.dataset.photos || '[]');
-        if (!photos.length) return;
+        if (!BAND.length) return;
         var i = Number(document.documentElement.dataset.hero || 0);
         fig.dataset.index = i;
-        fig.querySelectorAll('img').forEach(function (im) { im.src = photos[i]; });
+        fig.querySelectorAll('img').forEach(function (im) { im.src = BAND[i].src; });
       })();
     </script>
     <div class="hero-copy">
@@ -79,7 +79,6 @@
       <h1 class="wordmark"><img class="vb-logo" src="vb-logo.svg" alt="" width="65" height="62">Van<br>Beukering</h1>
       <p><b>90s rave anthems</b>, played by a full brass band.</p>
     </div>
-    <button type="button" class="hero-next" id="heroNext" aria-label="Next band member">next &#9654;</button>
   </section>
 
   <section id="about" aria-labelledby="about-h">
@@ -739,6 +738,7 @@ const saveData = !!(navigator.connection && navigator.connection.saveData);
 const root = document.documentElement;
 const rnd = (a, b) => a + Math.random() * (b - a), pick = a => a[Math.floor(Math.random() * a.length)];
 const pad = n => String(n).padStart(2, '0');
+const isMouse = e => e.pointerType === 'mouse';   // a tap is not a hover (on touch it would never "leave")
 
 /* noise texture for the TV screens, generated once */
 (function () {
@@ -797,52 +797,86 @@ function heat() {
 }
 if (!reduce) setTimeout(heat, 1200);
 
-/* ---- SMS ticker (pauses while hovered or focused) ---- */
+/* ---- SMS bar. Wide screens: the message scrolls past. Phones: it is typed in like on an old
+   phone, the line following the cursor, so it can be read while it appears. With reduced motion
+   it just shows (on two smaller lines when it does not fit). The mouse pauses it; a tap or click
+   skips to the next message. ---- */
 const smsBar = document.getElementById('sms'), smsEl = document.getElementById('smsMsg'), track = smsEl.parentElement;
-let smsI = Math.floor(Math.random() * SMS.length), smsAnim = null, smsHeld = false;
+const narrow = matchMedia('(max-width:700px)'), SMS_PAD = 10;
+let smsI = Math.floor(Math.random() * SMS.length), smsAnim = null, smsTimer = 0, smsHeld = false;
 function nextSms() {
-  const [n, m] = SMS[smsI++ % SMS.length]; smsEl.innerHTML = `<b>${n}:</b> ${m}`;
-  smsBar.classList.remove('new'); void smsBar.offsetWidth; smsBar.classList.add('new');
-  if (reduce) { smsEl.style.transform = 'translateX(8px)'; setTimeout(nextSms, 7000); return }
+  clearTimeout(smsTimer);
+  if (smsAnim) { smsAnim.onfinish = null; smsAnim.cancel(); smsAnim = null; }
+  const [n, m] = SMS[smsI++ % SMS.length];
+  smsBar.classList.remove('new', 'wrap', 'typing'); void smsBar.offsetWidth; smsBar.classList.add('new');
+  smsEl.style.transform = '';
+  if (reduce) {
+    smsEl.innerHTML = `<b>${n}:</b> ${m}`;
+    const wrap = smsEl.scrollWidth > track.clientWidth - 2 * SMS_PAD;
+    smsBar.classList.toggle('wrap', wrap);
+    if (!wrap) smsEl.style.transform = `translateX(${SMS_PAD}px)`;
+    smsTimer = setTimeout(nextSms, 8000); return;
+  }
+  if (narrow.matches) { typeSms(n, m); return; }
+  smsEl.innerHTML = `<b>${n}:</b> ${m}`;
   const w = track.clientWidth, mw = smsEl.scrollWidth;
   smsAnim = smsEl.animate([{ transform: `translateX(${w}px)` }, { transform: `translateX(${-mw}px)` }], { duration: (w + mw) / 0.08, easing: 'linear' });
   if (smsHeld) smsAnim.pause();
-  smsAnim.onfinish = () => setTimeout(nextSms, 1200);
+  smsAnim.onfinish = () => { smsAnim = null; smsTimer = setTimeout(nextSms, 1200); };
+}
+function typeSms(n, m) {
+  smsBar.classList.add('typing');
+  smsEl.innerHTML = `<b>${n}:</b> <span></span><i class="sms-cur" aria-hidden="true"></i>`;
+  const out = smsEl.querySelector('span');
+  let k = 0;
+  const follow = () => { smsEl.style.transform = `translateX(${Math.min(SMS_PAD, track.clientWidth - SMS_PAD - smsEl.scrollWidth)}px)`; };
+  const step = () => {
+    if (smsHeld) { smsTimer = setTimeout(step, 250); return; }
+    out.textContent = m.slice(0, ++k); follow();
+    smsTimer = k < m.length ? setTimeout(step, m[k - 1] === ' ' ? 110 : rnd(40, 80)) : setTimeout(nextSms, 3400);
+  };
+  follow();
+  smsTimer = setTimeout(step, 500);
 }
 const holdSms = on => { smsHeld = on; if (smsAnim) on ? smsAnim.pause() : smsAnim.play(); };
-smsBar.addEventListener('mouseenter', () => holdSms(true)); smsBar.addEventListener('mouseleave', () => holdSms(false));
+smsBar.addEventListener('pointerenter', e => { if (isMouse(e)) holdSms(true); });
+smsBar.addEventListener('pointerleave', e => { if (isMouse(e)) holdSms(false); });
 smsBar.addEventListener('focusin', () => holdSms(true)); smsBar.addEventListener('focusout', () => holdSms(false));
+track.addEventListener('click', () => { holdSms(false); nextSms(); });
 nextSms();
 
-/* ---- hero: glitch now and then, and rotate through the band members ---- */
+/* ---- hero: glitch now and then, and rotate through the band members; each one brings their
+   own colours (BAND, set up in <head>), switched under the glitch together with the photo ---- */
 const heroFig = document.getElementById('heroFig');
-const PHOTOS = JSON.parse(heroFig.dataset.photos || '[]');
+const PHOTOS = BAND;
 let heroIdx = Number(heroFig.dataset.index || 0), heroBusy = false;
 function heroGlitch(ms) { heroFig.classList.add('glitch'); setTimeout(() => heroFig.classList.remove('glitch'), ms || rnd(120, 320)); }
 function preloadNext() {
   if (reduce || saveData || PHOTOS.length < 2) return;
-  const im = new Image(); im.src = PHOTOS[(heroIdx + 1) % PHOTOS.length];
+  const im = new Image(); im.src = PHOTOS[(heroIdx + 1) % PHOTOS.length].src;
 }
 function heroShow(i) {
   if (heroBusy || PHOTOS.length < 2) return; heroBusy = true;
   heroIdx = (i + PHOTOS.length) % PHOTOS.length;
-  const img = new Image(); img.src = PHOTOS[heroIdx];
+  const p = PHOTOS[heroIdx], img = new Image(); img.src = p.src;
   const swap = () => {
     heroGlitch(260); heroFig.classList.add('swap');
-    setTimeout(() => { heroFig.querySelectorAll('img').forEach(im => im.src = PHOTOS[heroIdx]); heroFig.classList.remove('swap'); heroBusy = false; preloadNext(); }, 180);
+    setTimeout(() => {
+      heroFig.querySelectorAll('img').forEach(im => im.src = p.src);
+      for (const k in p.vars) root.style.setProperty(k, p.vars[k]);
+      heroFig.classList.remove('swap'); heroBusy = false; preloadNext();
+    }, 180);
   };
   img.decode ? img.decode().then(swap, swap) : (img.complete ? swap() : (img.onload = swap, img.onerror = swap));
 }
-const heroNext = document.getElementById('heroNext');
-// auto-rotation pauses while the photo is hovered, and stops for good once a visitor uses "next"
-let heroHover = false, heroManual = false;
-if (heroNext) heroNext.addEventListener('click', () => { heroManual = true; heroShow(heroIdx + 1); });
-heroFig.addEventListener('mouseenter', () => { heroHover = true; });
-heroFig.addEventListener('mouseleave', () => { heroHover = false; });
+// auto-rotation pauses while the mouse is on the photo
+let heroHover = false;
+heroFig.addEventListener('pointerenter', e => { if (isMouse(e)) heroHover = true; });
+heroFig.addEventListener('pointerleave', e => { if (isMouse(e)) heroHover = false; });
 if (!reduce) {
   (function loop() { heroGlitch(); setTimeout(loop, rnd(5000, 11000)) })();
   setInterval(() => {
-    if (!heroManual && !heroHover && document.visibilityState === 'visible' && scrollY < innerHeight) heroShow(heroIdx + 1);
+    if (!heroHover && document.visibilityState === 'visible' && scrollY < innerHeight) heroShow(heroIdx + 1);
   }, 9000);
 }
 addEventListener('load', preloadNext);
@@ -1039,19 +1073,22 @@ phones.addEventListener('click', () => { phones.classList.remove('ring'); void p
   if (reduce || !matchMedia('(pointer:fine)').matches) return;
   const cv = document.getElementById('dust'), cx = cv.getContext('2d'); let W, H; const dpr = Math.min(2, devicePixelRatio || 1), P = []; let running = false, last = 0;
   function size() { W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; cx.setTransform(dpr, 0, 0, dpr, 0, 0) } size(); addEventListener('resize', size);
-  // the glow (shadowBlur) is drawn once into two sprites instead of for every particle on every frame
+  // the glow (shadowBlur) is drawn once into a sprite per colour instead of for every particle on every frame
   const SPR = 40, BASE = 8;
-  function sprite(red) {
+  function sprite(col) {
     const c = document.createElement('canvas'); c.width = c.height = SPR * dpr; const g = c.getContext('2d');
     g.scale(dpr, dpr); g.translate(SPR / 2, SPR / 2);
-    g.shadowColor = red ? 'rgba(228,77,105,.85)' : 'rgba(0,0,0,.45)'; g.shadowBlur = red ? 9 : 3; g.fillStyle = red ? '#E44D69' : '#fff';
+    g.shadowColor = col || 'rgba(0,0,0,.45)'; g.shadowBlur = col ? 9 : 3; g.fillStyle = col || '#fff';
     g.beginPath(); for (let i = 0; i < 4; i++) { g.rotate(Math.PI / 2); g.moveTo(0, 0); g.quadraticCurveTo(BASE * .18, BASE * .18, 0, BASE); g.quadraticCurveTo(-BASE * .18, BASE * .18, 0, 0) } g.fill();
     return c;
   }
-  const RED = sprite(true), WHITE = sprite(false);
+  // coloured dust takes the current band member's accent
+  const WHITE = sprite(null), tints = {};
+  const tint = () => { const c = root.style.getPropertyValue('--accent').trim() || '#E44D69'; return tints[c] || (tints[c] = sprite(c)); };
   addEventListener('pointermove', e => {
     const now = performance.now(); if (now - last < 12) return; last = now;
-    for (let i = 0; i < 4; i++) P.push({ x: e.clientX + rnd(-6, 6), y: e.clientY + rnd(-6, 6), vx: rnd(-1.4, 1.4), vy: rnd(-1.8, .6), life: 1, decay: rnd(.012, .026), s: rnd(3, 8), rot: rnd(0, 3), red: Math.random() < .55, tw: rnd(0, 6) });
+    const T = tint();
+    for (let i = 0; i < 4; i++) P.push({ x: e.clientX + rnd(-6, 6), y: e.clientY + rnd(-6, 6), vx: rnd(-1.4, 1.4), vy: rnd(-1.8, .6), life: 1, decay: rnd(.012, .026), s: rnd(3, 8), rot: rnd(0, 3), spr: Math.random() < .55 ? T : WHITE, tw: rnd(0, 6) });
     if (P.length > 320) P.splice(0, P.length - 320);
     if (!running) { running = true; requestAnimationFrame(loop) }
   });
@@ -1061,7 +1098,7 @@ phones.addEventListener('click', () => { phones.classList.remove('ring'); void p
       const p = P[i]; p.x += p.vx; p.y += p.vy; p.vy += .03; p.vx *= .985; p.rot += .07; p.life -= p.decay; if (p.life <= 0) { P.splice(i, 1); continue }
       p.tw += .35; const k = p.s * (.45 + p.life * .55) / BASE, half = SPR * k / 2;
       cx.globalAlpha = p.life * (.65 + .35 * Math.sin(p.tw));
-      cx.save(); cx.translate(p.x, p.y); cx.rotate(p.rot); cx.drawImage(p.red ? RED : WHITE, -half, -half, half * 2, half * 2); cx.restore();
+      cx.save(); cx.translate(p.x, p.y); cx.rotate(p.rot); cx.drawImage(p.spr, -half, -half, half * 2, half * 2); cx.restore();
       if (p.s > 6.5 && p.life > .5) { cx.globalAlpha = p.life * .5; cx.beginPath(); cx.arc(p.x, p.y, 1.2, 0, 7); cx.fillStyle = '#fff'; cx.fill() }
     }
     if (P.length) requestAnimationFrame(loop); else { running = false; cx.clearRect(0, 0, W, H) }

@@ -7,10 +7,13 @@
 /* ============================================================
    Van Beukering - 90s rave on brass
    Tokens. Ground = noise tile; background letters = HAKKUH pattern.
+   --type, --accent and --accent-text are the band member's colours: the page script sets them
+   from website_generator.BAND_THEMES with every photo. The values here are the default (pink).
    ============================================================ */
 :root{
   --ground:#ffffff; --type:#D9415D; --type-o:.3; --accent:#E44D69; --ink:#161616; --ink-soft:#5b5b5b;
-  --accent-text:#C2304D;   /* accent for small text: 5.4:1 on white (AA); --accent stays for fills, rings, shadows */
+  --accent-text:#C2304D;   /* accent for small text: 4.5:1+ on white (AA); --accent stays for fills, rings, shadows */
+  --brand:#E44D69;         /* the band pink; the TV player on its dark backdrop always uses it */
   --line:rgba(22,22,22,.18); --paper:#f6f4f0;
   --sms-h:32px;
   --f-bg:'Bruno Ace SC','Eurostile','Arial Rounded MT Bold',sans-serif;
@@ -26,13 +29,13 @@ html{scroll-padding-top:calc(var(--sms-h) + env(safe-area-inset-top,0px));scroll
 body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--f-body);font-size:12px;line-height:1.9;overflow-x:hidden}
 img{max-width:100%;height:auto;display:block}
 a{color:inherit}
-:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+:focus-visible{outline:2px solid var(--accent-text);outline-offset:3px}
 #ground{position:fixed;inset:0;z-index:0;background:#fff url(ground.webp) 0 0/512px 512px repeat;pointer-events:none}
 #ground::after{content:"";position:absolute;inset:0;background:#fff;opacity:.64}
 
 /* ============ BACKGROUND: HAKKUH pattern (Bruno Ace SC, 86.4px on a 1280 frame) ============ */
 #type{position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none;transition:opacity .25s linear}
-.lcol{position:absolute;top:0;left:var(--x);font-family:var(--f-bg);font-size:var(--lf);line-height:var(--lp);white-space:pre;color:var(--type);opacity:var(--type-o)}
+.lcol{position:absolute;top:0;left:var(--x);font-family:var(--f-bg);font-size:var(--lf);line-height:var(--lp);white-space:pre;color:var(--type);opacity:var(--type-o);transition:color .5s ease}
 .hrow{position:absolute;left:0;right:0;pointer-events:none}
 .hrow span{position:absolute;top:0;font-family:var(--f-bg);font-size:var(--lf);line-height:var(--lp);white-space:pre;color:var(--accent);opacity:0;transition:opacity .22s ease}
 .hrow.on span{opacity:.85}
@@ -43,9 +46,14 @@ a{color:inherit}
 .sms-tag i{width:7px;height:7px;border-radius:50%;background:var(--accent);display:block}
 .sms.new .sms-tag i{animation:blink .5s steps(1) 4}
 @keyframes blink{50%{opacity:0}}
-.sms-track{flex:1;position:relative;overflow:hidden;display:flex;align-items:center}
+.sms-track{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;cursor:pointer;-webkit-mask-image:linear-gradient(90deg,transparent,#000 10px,#000 calc(100% - 10px),transparent);mask-image:linear-gradient(90deg,transparent,#000 10px,#000 calc(100% - 10px),transparent)}
 .sms-msg{position:absolute;white-space:nowrap;left:0;will-change:transform;margin:0}
 .sms-msg b{color:var(--accent-text);font-weight:400}
+/* phones: typed in letter by letter, the line slides along with the cursor */
+.sms.typing .sms-msg{transition:transform .14s linear}
+.sms-cur{display:inline-block;width:.7em;height:1em;margin-left:2px;vertical-align:-.12em;background:currentColor;animation:blink 1s steps(1) infinite}
+/* reduced motion and too long for one line: two smaller lines */
+.sms.wrap .sms-msg{left:10px;right:10px;white-space:normal;font-size:8px;line-height:1.35;max-height:2.7em;overflow:hidden}
 .sms-cta{display:flex;align-items:center;padding:0 12px;flex:0 0 auto;white-space:nowrap;opacity:.7;color:inherit;text-decoration:none;transition:opacity .2s,color .2s}
 .sms-cta:hover{opacity:1;color:var(--accent-text)}
 @media (max-width:700px){.sms-cta{display:none}}
@@ -80,15 +88,10 @@ h2{font-weight:700;font-size:clamp(22px,3.4vw,44px);line-height:1.2;letter-spaci
 .hero-copy .kicker{margin-bottom:12px}
 .hero-copy p{font-size:clamp(11px,1vw,14px);line-height:1.8;margin:18px 0 0;color:var(--ink-soft);text-shadow:0 0 10px #fff,0 0 3px #fff}
 .hero-copy p b{color:var(--ink);font-weight:500}
-.hero-next{position:absolute;right:clamp(12px,3vw,40px);bottom:clamp(16px,4vh,40px);z-index:4;font:inherit;font-size:9px;background:#fff;border:1.5px solid var(--ink);color:var(--ink);padding:9px 12px;cursor:pointer;opacity:.75;transition:opacity .2s,background .2s,color .2s}
-.hero-next:hover,.hero-next:focus-visible{opacity:1;background:var(--ink);color:#fff}
-@media (pointer:coarse){.hero-next{min-height:44px}}
-/* phones: the button goes under the subtitle so it never covers a face */
 @media (max-width:620px){
   .hero-fig{min-height:clamp(180px,40svh,420px)}
   .hero-copy{margin-top:calc(-1 * clamp(16px,4vh,36px))}
   .hero-copy p{margin-top:12px}
-  .hero-next{position:relative;right:auto;bottom:auto;margin-top:14px}
 }
 
 /* ---- ABOUT / TV WALL ---- */
@@ -147,7 +150,7 @@ dialog.tvzoom.show::backdrop{background:rgba(10,10,10,.93)}
 .tz-bar{display:flex;gap:22px;align-items:center;flex-wrap:wrap;justify-content:center;font-family:var(--f-pixel);font-size:12px;color:#e8e8e8;opacity:0;transition:opacity .3s;padding:0 16px;text-align:center}
 dialog.tvzoom.show .tz-bar{opacity:1}
 .tz-bar a{color:#e8e8e8}
-.tz-bar button{font:inherit;background:var(--accent);color:#111;border:0;padding:6px 14px;min-height:44px;cursor:pointer}
+.tz-bar button{font:inherit;background:var(--brand);color:#111;border:0;padding:6px 14px;min-height:44px;cursor:pointer}
 .tz-bar .ch{color:#9dff9d;min-width:6ch}
 .tz-bar .tz-title{flex-basis:100%;order:-1;color:#e8e8e8;opacity:.85;font-size:10px;line-height:1.6}
 .tz-zap{font:inherit;background:#111;color:#9dff9d;border:1.5px solid #9dff9d;padding:6px 12px;min-height:44px;cursor:pointer;transition:background .15s,color .15s}
@@ -206,10 +209,13 @@ dialog.tvzoom.show .tz-bar{opacity:1}
 @keyframes sway{from{transform:rotate(-1.8deg)}to{transform:rotate(1.8deg)}}
 @keyframes ring{0%{transform:rotate(-2deg) translateX(-2px)}50%{transform:rotate(2deg) translateX(2px)}100%{transform:rotate(-2deg)}}
 footer{position:absolute;left:0;right:0;bottom:16px;text-align:center;font-size:9px;color:var(--ink-soft)}
+/* small screens: the phones hang behind the contact details instead of above them */
 @media (max-width:820px){
   section{padding-bottom:56px}
   #contact{grid-template-columns:1fr}
-  .phones{order:-1;width:min(38vw,170px);margin:calc(-1 * (var(--sms-h) + 40px)) 4px -8px auto}
+  .phones{position:absolute;top:0;right:-6px;z-index:0;width:min(58vw,270px);margin:0;opacity:.55}
+  .contact-text{position:relative;z-index:1}
+  .contact-text .kicker,.contact-text h2,.contact-text>p,.contact-lines span,.contact-lines a{text-shadow:0 0 6px #fff,0 0 2px #fff,0 0 12px #fff}
   .contact-lines li{grid-template-columns:1fr;gap:6px}
 }
 
